@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a very simple application that uses AI to convert the prompts entered by the user into images. This will be the next feature of the Editia project.
+This is a very simple application that uses AI to convert the prompts entered by the user into images. This will be the next feature of the [Editia Project.](https://github.com/jezbravo/editia)
 
 ### Stack
 

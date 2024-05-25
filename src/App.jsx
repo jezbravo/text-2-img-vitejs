@@ -98,7 +98,7 @@ function Home() {
             >
               {loading ? (
                 <>
-                  <span className="mr-2">Generating...</span>
+                  <span className="mr-2">Generating. Please Wait...</span>
                   <img
                     src="/penguin.gif"
                     alt="penguin"

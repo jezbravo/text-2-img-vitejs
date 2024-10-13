@@ -2,6 +2,7 @@ import { useState } from "react";
 import { HfInference } from "@huggingface/inference";
 import getCurrentDateTime from "./script/date";
 import { saveAs } from "file-saver";
+import { mainModel } from "../models";
 
 const hf = new HfInference(import.meta.env.VITE_HF_TOKEN);
 
@@ -35,18 +36,20 @@ function Home() {
 
   async function generateImage() {
     const { date, time } = getCurrentDateTime();
-    const model = import.meta.env.VITE_TXT_TO_IMG_MODEL;
+    // const model = import.meta.env.VITE_TXT_TO_IMG_MODEL;
+    const model = mainModel;
+    console.log("model: ", model);
 
     const res = await hf.textToImage({
       inputs: textInput,
       model: model,
       endpointUrl: `https://api-inference.huggingface.co/models/${model}`,
-      parameters: {
-        negative_prompt:
-          "blurry, watermark, more than or less than 5 fingers on each hand, incomplete fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, ugly, bad anatomy, bad proportions, more than or less than 2 limbs, glitchy, double torso, more than or less than 2 arms, more than or less than 2 hands, mangled fingers, missing lips, ugly face, distorted face, more than or less than 2 legs, inconsistent lighting, squinting eyes, inconsistent clothing, disproportionate, incoherent shine, skinny,low resolution, blurred image, deformed iris, deformed pupils, worst quality, low quality, gross proportions, malformed limbs, missing arms, missing legs, missing fingers, extra arms, extra legs, fused fingers, long neck, bad formed body, incoherent anatomy, signature at the bottom of the page, lowres",
-        safety_checker: "no",
-        enhance_prompt: "yes",
-      },
+      // parameters: {
+      //   negative_prompt:
+      //     "blurry, watermark, more than or less than 5 fingers on each hand, incomplete fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, ugly, bad anatomy, bad proportions, more than or less than 2 limbs, glitchy, double torso, more than or less than 2 arms, more than or less than 2 hands, mangled fingers, missing lips, ugly face, distorted face, more than or less than 2 legs, inconsistent lighting, squinting eyes, inconsistent clothing, disproportionate, incoherent shine, skinny,low resolution, blurred image, deformed iris, deformed pupils, worst quality, low quality, gross proportions, malformed limbs, missing arms, missing legs, missing fingers, extra arms, extra legs, fused fingers, long neck, bad formed body, incoherent anatomy, signature at the bottom of the page, lowres",
+      //   safety_checker: "no",
+      //   enhance_prompt: "yes",
+      // },
     });
 
     // console.log(res);
@@ -58,7 +61,10 @@ function Home() {
         type: "image/jpeg",
       });
 
-      const filename = `img_${date}_${time}.jpg`;
+      const modelName = model.replace("/", "-");
+      console.log("modelName: ", modelName);
+
+      const filename = `img_${date}_${time}_${modelName}.jpg`;
 
       alert("Image generation successful!");
       saveAs(blob, filename);

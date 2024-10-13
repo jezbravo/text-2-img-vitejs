@@ -68,6 +68,17 @@ function Home() {
 
       alert("Image generation successful!");
       saveAs(blob, filename);
+
+      // Add this code to send a POST request to the server
+      fetch("http://localhost:3001/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, time, filename, textInput }),
+      })
+        .then((response) => response.text())
+        .then((message) => console.log(message))
+        .catch((error) => console.error(error));
+
       console.log("Image generation successful!");
     } else {
       console.error("No image data found in the response");

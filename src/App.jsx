@@ -62,7 +62,7 @@ function Home() {
       });
 
       const modelName = model.replace("/", "-");
-      console.log("modelName: ", modelName);
+      // console.log("modelName: ", modelName);
 
       const filename = `img_${date}_${time}_${modelName}.jpg`;
 
@@ -73,7 +73,7 @@ function Home() {
       fetch("http://localhost:3001/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, time, filename, textInput }),
+        body: JSON.stringify({ filename, textInput }),
       })
         .then((response) => response.text())
         .then((message) => console.log(message))

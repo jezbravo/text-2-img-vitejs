@@ -13,8 +13,8 @@ app.use(
 app.use(json());
 
 app.post("/log", (req, res) => {
-  const { date, time, filename, textInput } = req.body;
-  const logMessage = `${date} ${time} - ${filename} - ${textInput}\n`;
+  const { filename, textInput } = req.body;
+  const logMessage = `FILENAME: ${filename}\nPROMPT: ${textInput}\n-------\n`;
   appendFile("log.txt", logMessage, (err) => {
     if (err) {
       console.error(err);

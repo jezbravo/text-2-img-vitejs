@@ -112,6 +112,7 @@ function Home() {
               className="relative flex w-full items-center justify-center rounded-lg bg-blue-400 p-2 text-white hover:bg-blue-600"
               type="submit"
               disabled={loading}
+              autoFocus
             >
               {loading ? (
                 <>

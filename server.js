@@ -19,8 +19,11 @@ app.post("/log", (req, res) => {
     if (err) {
       console.error(err);
     } else {
-      console.log("Log written successfully!");
-      res.send("Log written successfully!");
+      const actualDate = new Date();
+      const formattedDate = `${actualDate.toLocaleDateString()} ${actualDate.toLocaleTimeString()}`;
+
+      console.log(`Log written successfully! ${formattedDate}`);
+      res.send(`Log written successfully! ${formattedDate}`);
     }
   });
 });

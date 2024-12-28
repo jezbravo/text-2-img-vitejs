@@ -30,7 +30,7 @@ function Home() {
     } catch (error) {
       setLoading(false);
       console.error("Error generating image:", error);
-      alert("Error generating image:", error);
+      alert(`Error generating image: ${error}`);
     }
   };
 
@@ -69,7 +69,7 @@ function Home() {
       alert("Image generation successful!");
       saveAs(blob, filename);
 
-      // Add this code to send a POST request to the server
+      // POST request to the server
       fetch("http://localhost:3001/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

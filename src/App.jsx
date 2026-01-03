@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { HfInference } from "@huggingface/inference";
 import getCurrentDateTime from "./script/date";
 import { saveAs } from "file-saver";
 import { mainModel } from "../models";
-import { Copy, Trash2 } from "lucide-react";
-
-const hf = new HfInference(import.meta.env.VITE_HF_TOKEN);
+import { Copy, Trash2, ChevronDown } from "lucide-react";
 
 function Home() {
   const [textInput, setTextInput] = useState(
@@ -16,6 +13,8 @@ function Home() {
   const [width, setWidth] = useState(512);
   const [height, setHeight] = useState(512);
   const [shape, setShape] = useState("square");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Function to handle changes in the textarea
   const handleTextareaChange = (event) => {
@@ -41,12 +40,28 @@ function Home() {
     }
   };
 
+  const triggerToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(textInput);
+    triggerToast("Prompt copied to clipboard!");
   };
 
   const clearText = () => {
     setTextInput("");
+  };
+
+  const copyNegativePrompt = () => {
+    navigator.clipboard.writeText(negativePrompt);
+    triggerToast("Negative prompt copied to clipboard!");
+  };
+
+  const clearNegativePrompt = () => {
+    setNegativePrompt("");
   };
 
   // Function to handle form submission
@@ -159,6 +174,7 @@ function Home() {
                     onClick={copyToClipboard}
                     className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-500 transition-colors cursor-pointer"
                     title="Copy prompt"
+                    aria-label="Copy positive prompt"
                   >
                     <Copy size={18} />
                   </button>
@@ -167,6 +183,7 @@ function Home() {
                     onClick={clearText}
                     className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-500 transition-colors cursor-pointer"
                     title="Clear prompt"
+                    aria-label="Clear positive prompt"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -181,31 +198,58 @@ function Home() {
               >
                 Negative Prompt
               </label>
-              <textarea
+              <div className="relative">
+                <textarea
                   name="negativePrompt"
                   id="negativePrompt"
                   placeholder="What to exclude (e.g. ugly, blurry, bad anatomy)..."
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400 transition-all font-sans text-gray-700"
+                  rows={4}
+                  className="w-full rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-red-400 focus:outline-none focus:ring-1 focus:ring-red-400 transition-all font-sans text-gray-700"
                   value={negativePrompt}
                   onChange={handleNegativePromptChange}
                 ></textarea>
+                <div className="absolute right-2 top-2 flex flex-col space-y-2 bg-white/90 p-1 rounded-md shadow-sm border border-gray-100">
+                  <button
+                    type="button"
+                    onClick={copyNegativePrompt}
+                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-500 transition-colors cursor-pointer"
+                    title="Copy negative prompt"
+                    aria-label="Copy negative prompt"
+                  >
+                    <Copy size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={clearNegativePrompt}
+                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-500 transition-colors cursor-pointer"
+                    title="Clear negative prompt"
+                    aria-label="Clear negative prompt"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
                <label htmlFor="shape" className="block text-sm font-semibold text-gray-700">
                   Image Shape
                </label>
-               <select
-                  id="shape"
-                  value={shape}
-                  onChange={handleShapeChange}
-                  className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-gray-700"
-               >
-                  <option value="square">Square (512 x 512)</option>
-                  <option value="portrait">Portrait (512 x 768)</option>
-                  <option value="landscape">Landscape (768 x 512)</option>
-               </select>
+               <div className="relative">
+                 <select
+                    id="shape"
+                    value={shape}
+                    onChange={handleShapeChange}
+                    className="w-full appearance-none rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 cursor-pointer"
+                 >
+                    <option value="square">Square (512 x 512)</option>
+                    <option value="portrait">Portrait (512 x 768)</option>
+                    <option value="landscape">Landscape (768 x 512)</option>
+                 </select>
+                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                    <ChevronDown size={18} />
+                 </div>
+               </div>
             </div>
               
             <button
@@ -241,6 +285,22 @@ function Home() {
           </form>
         </div>
       </main>
+
+      {/* Toast Notification */}
+      <div 
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform ${
+          showToast ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg flex items-center space-x-2 border border-gray-700">
+          <div className="bg-green-500 rounded-full p-1">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="font-medium text-sm">{toastMessage}</span>
+        </div>
+      </div>
     </>
   );
 }

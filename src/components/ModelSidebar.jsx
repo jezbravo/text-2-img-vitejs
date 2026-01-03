@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Heart, 
   ThumbsDown, 
   Search, 
   RotateCw, 
-  Star, 
+  Star,
   Check, 
   ChevronRight,
   Info,
@@ -13,7 +13,20 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 
-const API_BASE = 'https://huggingface.co/api/models';
+// Inference providers that support text-to-image
+const TEXT_TO_IMAGE_PROVIDERS = [
+  'hf-inference',
+  'fal-ai', 
+  'replicate',
+  'together',
+  'nebius',
+  'nscale',
+  'novita',
+  'wavespeed',
+  'hyperbolic',
+  'fireworks-ai',
+  'scaleway'
+];
 
 const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "text-to-image" }) => {
   const [models, setModels] = useState([]);
@@ -28,22 +41,83 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
     return saved ? JSON.parse(saved) : [];
   });
 
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}?filter=${task},endpoints_compatible&sort=downloads&direction=-1&limit=100`);
-      const data = await res.json();
-      setModels(data);
+      // Fetch models from all inference providers in parallel
+      const providerPromises = TEXT_TO_IMAGE_PROVIDERS.map(async (provider) => {
+        try {
+          const res = await fetch(`https://huggingface.co/api/partners/${provider}/models`);
+          if (!res.ok) return [];
+          const data = await res.json();
+          
+          // Extract text-to-image models from the response
+          const taskModels = data[task] || {};
+          return Object.keys(taskModels).map(modelId => ({
+            id: modelId,
+            provider: provider,
+            providerId: taskModels[modelId].providerId,
+            status: taskModels[modelId].status,
+          }));
+        } catch (e) {
+          console.warn(`Failed to fetch from ${provider}:`, e);
+          return [];
+        }
+      });
+
+      const allProviderModels = await Promise.all(providerPromises);
+      
+      // Flatten and deduplicate models (same model might be available on multiple providers)
+      const modelMap = new Map();
+      allProviderModels.flat().forEach(model => {
+        if (model.id && !model.id.startsWith('tag-filter=')) { // Skip special filter entries
+          const existing = modelMap.get(model.id);
+          if (existing) {
+            // Add provider to existing model's provider list
+            if (!existing.providers) existing.providers = [existing.provider];
+            existing.providers.push(model.provider);
+          } else {
+            model.providers = [model.provider];
+            modelMap.set(model.id, model);
+          }
+        }
+      });
+
+      const uniqueModels = Array.from(modelMap.values());
+      console.log(`Fetched ${uniqueModels.length} supported models for ${task}`);
+      
+      // Now fetch likes/downloads for each model from HF API (in batches to avoid too many requests)
+      const enrichedModels = await Promise.all(
+        uniqueModels.map(async (model) => {
+          try {
+            const res = await fetch(`https://huggingface.co/api/models/${model.id}`);
+            if (res.ok) {
+              const data = await res.json();
+              return {
+                ...model,
+                likes: data.likes || 0,
+                downloads: data.downloads || 0,
+              };
+            }
+          } catch {
+            // Silently fail for individual model metadata
+          }
+          return { ...model, likes: 0, downloads: 0 };
+        })
+      );
+      
+      setModels(enrichedModels);
     } catch (error) {
       console.error('Error fetching HF models:', error);
+      setModels([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
-  };
+  }, [task]);
 
   useEffect(() => {
     fetchModels();
-  }, [task]);
+  }, [fetchModels]);
 
   useEffect(() => {
     localStorage.setItem(`hf_favorites_${task}`, JSON.stringify(favorites));
@@ -220,7 +294,7 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
                       {model.likes?.toLocaleString() || 0}
                     </span>
                     <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
-                      {model.downloads > 1000 ? `${(model.downloads/1000).toFixed(1)}k` : model.downloads} dl
+                      {model.downloads > 1000 ? `${(model.downloads/1000).toFixed(1)}k` : model.downloads || 0} dl
                     </span>
                   </div>
                   {isSelected && (

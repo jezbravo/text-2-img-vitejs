@@ -21,13 +21,14 @@ app.use(json());
 const hf = new InferenceClient(process.env.VITE_HF_TOKEN);
 
 app.post("/api/generateImage", async (req, res) => {
-  const { prompt, negative_prompt, model, width, height } = req.body;
+  const { prompt, negative_prompt, model, width, height, provider } = req.body;
   console.log("Request body:", req.body);
 
   try {
     const response = await hf.textToImage({
       model: model,
       inputs: prompt,
+      provider: provider || "auto",
       parameters: {
         negative_prompt: negative_prompt,
         width: width ? parseInt(width) : undefined,
@@ -52,8 +53,14 @@ app.post("/api/generateImage", async (req, res) => {
 });
 
 app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
-  const { prompt, model } = req.body;
+  const { prompt, model, provider } = req.body;
   const image = req.file;
+
+  console.log("=== IMAGE TO IMAGE REQUEST ===");
+  console.log("Model:", model);
+  console.log("Provider (raw):", provider);
+  console.log("Provider (will use):", provider || "auto");
+  console.log("==============================");
 
   if (!image) {
     return res.status(400).json({ error: "No image file provided" });
@@ -62,9 +69,13 @@ app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
   try {
     // Convert Buffer to a Blob/ArrayBuffer format that the SDK expects
     // for certain providers like fal-ai that might incorrectly assume browser-like objects.
+    const selectedProvider = provider || "auto";
+    console.log("Calling hf.imageToImage with provider:", selectedProvider);
+    
     const response = await hf.imageToImage({
       model: model,
       inputs: new Blob([image.buffer]),
+      provider: selectedProvider,
       parameters: {
         prompt: prompt,
       },

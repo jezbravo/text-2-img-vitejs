@@ -1,8 +1,7 @@
 import { useState } from "react";
 import getCurrentDateTime from "../script/date";
 import { saveAs } from "file-saver";
-import { mainModel as defaultModel } from "../../models";
-import { Copy, Trash2, ChevronDown, Menu, Sparkles, Upload, Image as ImageIcon, Home } from "lucide-react";
+import { Copy, Trash2, ChevronDown, Menu, Upload, Image as ImageIcon, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ModelSidebar from "../components/ModelSidebar";
 
@@ -13,9 +12,33 @@ function ImageToImage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("stabilityai/stable-diffusion-xl-refiner-1.0"); // Better default for img2img
+  const [provider, setProvider] = useState("auto");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  const providers = [
+    "auto",
+    "cerebras",
+    "cohere", 
+    "fal-ai",
+    "featherless-ai",
+    "fireworks-ai",
+    "groq",
+    "hf-inference",
+    "hyperbolic",
+    "nebius",
+    "novita",
+    "nscale",
+    "ovhcloud",
+    "publicai",
+    "replicate",
+    "sambanova",
+    "scaleway",
+    "together",
+    "wavespeed",
+    "zai-org"
+  ];
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -57,6 +80,9 @@ function ImageToImage() {
       formData.append("image", selectedImage);
       formData.append("prompt", textInput);
       formData.append("model", selectedModel);
+      formData.append("provider", provider);
+      
+      console.log("Sending request with provider:", provider);
 
       const response = await fetch("http://localhost:3001/api/imageToImage", {
         method: "POST",
@@ -69,7 +95,7 @@ function ImageToImage() {
         try {
           const errorData = JSON.parse(errorText);
           errorMsg = errorData.error || errorText;
-        } catch (e) {
+        } catch {
           // not json
         }
         
@@ -152,6 +178,27 @@ function ImageToImage() {
                       <p className="text-gray-500 font-medium">Click or drag to upload source image</p>
                     </>
                   )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="provider" className="block text-sm font-semibold text-gray-700">Inference Provider</label>
+                <div className="relative">
+                  <select
+                    id="provider"
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-gray-700 cursor-pointer"
+                  >
+                    {providers.map((p) => (
+                      <option key={p} value={p}>
+                        {p === "auto" ? "Automatic Selection" : p}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                    <ChevronDown size={18} />
+                  </div>
                 </div>
               </div>
 

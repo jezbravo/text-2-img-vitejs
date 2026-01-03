@@ -9,7 +9,8 @@ import ModelSidebar from "../components/ModelSidebar";
 function TextToImage() {
   const navigate = useNavigate();
   const [textInput, setTextInput] = useState(
-    "A cute robot in a cyberpunk city",
+    // "A cute robot in a cyberpunk city",
+    "Harley Quinn, sexy, bikini, beach"
   );
   const [negativePrompt, setNegativePrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,9 +18,33 @@ function TextToImage() {
   const [height, setHeight] = useState(512);
   const [shape, setShape] = useState("square");
   const [selectedModel, setSelectedModel] = useState(defaultModel);
+  const [provider, setProvider] = useState("auto");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  const providers = [
+    "auto",
+    "cerebras",
+    "cohere", 
+    "fal-ai",
+    "featherless-ai",
+    "fireworks-ai",
+    "groq",
+    "hf-inference",
+    "hyperbolic",
+    "nebius",
+    "novita",
+    "nscale",
+    "ovhcloud",
+    "publicai",
+    "replicate",
+    "sambanova",
+    "scaleway",
+    "together",
+    "wavespeed",
+    "zai-org"
+  ];
 
   const handleTextareaChange = (event) => {
     setTextInput(event.target.value);
@@ -114,6 +139,7 @@ function TextToImage() {
         prompt: textInput, 
         negative_prompt: negativePrompt,
         model: selectedModel, 
+        provider: provider,
         width, 
         height 
       }),
@@ -337,6 +363,27 @@ function TextToImage() {
               </div>
             )}
               
+            <div className="space-y-2">
+              <label htmlFor="provider" className="block text-sm font-semibold text-gray-700">Inference Provider</label>
+              <div className="relative">
+                <select
+                  id="provider"
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 cursor-pointer"
+                >
+                  {providers.map((p) => (
+                    <option key={p} value={p}>
+                      {p === "auto" ? "Automatic Selection" : p}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                  <ChevronDown size={18} />
+                </div>
+              </div>
+            </div>
+
             <button
               className="relative flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 p-3 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl active:scale-[0.98] transition-all duration-200 cursor-pointer"
               type="submit"

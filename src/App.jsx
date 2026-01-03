@@ -7,7 +7,7 @@ import ModelSidebar from "./components/ModelSidebar";
 
 function Home() {
   const [textInput, setTextInput] = useState(
-    "Harley Quinn, beautiful, masterpiece",
+    "A cute robot in a cyberpunk city",
   );
   const [negativePrompt, setNegativePrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -178,7 +178,6 @@ function Home() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
-
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-[320px]' : 'ml-0'}`}>
         {/* Top Navbar */}
         <header className="sticky top-0 z-30 glass border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -186,7 +185,7 @@ function Home() {
              {!isSidebarOpen && (
                <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 cursor-pointer"
                >
                  <Menu size={20} />
                </button>

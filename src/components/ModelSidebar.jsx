@@ -120,7 +120,7 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose }) => {
         </div>
         <button 
           onClick={onClose}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
         >
           <ChevronRight className={`w-5 h-5 text-gray-500 transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>

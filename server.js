@@ -21,13 +21,18 @@ import { HfInference } from "@huggingface/inference";
 const hf = new HfInference(process.env.VITE_HF_TOKEN);
 
 app.post("/api/generateImage", async (req, res) => {
-  const { prompt, model } = req.body;
+  const { prompt, negative_prompt, model, width, height } = req.body;
   console.log("Request body:", req.body);
 
   try {
     const response = await hf.textToImage({
       model: model,
       inputs: prompt,
+      parameters: {
+        negative_prompt: negative_prompt,
+        width: width ? parseInt(width) : undefined,
+        height: height ? parseInt(height) : undefined,
+      },
     });
 
     const arrayBuffer = await response.arrayBuffer();

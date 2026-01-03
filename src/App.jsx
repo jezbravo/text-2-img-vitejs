@@ -1,8 +1,9 @@
 import { useState } from "react";
 import getCurrentDateTime from "./script/date";
 import { saveAs } from "file-saver";
-import { mainModel } from "../models";
-import { Copy, Trash2, ChevronDown } from "lucide-react";
+import { mainModel as defaultModel } from "../models";
+import { Copy, Trash2, ChevronDown, Menu, Sparkles } from "lucide-react";
+import ModelSidebar from "./components/ModelSidebar";
 
 function Home() {
   const [textInput, setTextInput] = useState(
@@ -13,6 +14,8 @@ function Home() {
   const [width, setWidth] = useState(512);
   const [height, setHeight] = useState(512);
   const [shape, setShape] = useState("square");
+  const [selectedModel, setSelectedModel] = useState(defaultModel);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -38,6 +41,16 @@ function Home() {
       setWidth(768);
       setHeight(512);
     }
+  };
+
+  const handleWidthChange = (e) => {
+    const val = e.target.value === "" ? "" : parseInt(e.target.value);
+    setWidth(val);
+  };
+
+  const handleHeightChange = (e) => {
+    const val = e.target.value === "" ? "" : parseInt(e.target.value);
+    setHeight(val);
   };
 
   const triggerToast = (message) => {
@@ -79,13 +92,23 @@ function Home() {
     } catch (error) {
       setLoading(false);
       console.error("Error generating image:", error);
-      alert(`Error generating image: ${error}`);
+      
+      let errorMessage = "Error generating image.";
+      if (error.message.includes("No Inference Provider available")) {
+        errorMessage = "This model is not currently available via the free Hugging Face API. Please select another model from the list.";
+      } else if (error.message.includes("500") || error.message.includes("Server Error")) {
+        errorMessage = "Internal Server Error. The model might be too large or currently unavailable.";
+      } else {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     }
   };
 
   async function generateImage() {
     const { date, time } = getCurrentDateTime();
-    const model = mainModel;
+    const model = selectedModel;
     console.log("model: ", model);
 
     const response = await fetch("http://localhost:3001/api/generateImage", {
@@ -94,15 +117,20 @@ function Home() {
       body: JSON.stringify({ 
         prompt: textInput, 
         negative_prompt: negativePrompt,
-        model: mainModel, 
+        model: selectedModel, 
         width, 
         height 
       }),
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err);
+      const errorText = await response.text();
+      try {
+      const errorData = JSON.parse(errorText);
+        throw new Error(errorData.error || errorText);
+      } catch {
+        throw new Error(errorText || "Unknown error occurred");
+      }
     }
 
     const res = await response.blob();
@@ -143,8 +171,45 @@ function Home() {
     return res;
   }
   return (
-    <>
-      <main className="mt-14 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex">
+      <ModelSidebar 
+        selectedModel={selectedModel} 
+        onSelectModel={setSelectedModel} 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+
+      <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-[320px]' : 'ml-0'}`}>
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-30 glass border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+             {!isSidebarOpen && (
+               <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+               >
+                 <Menu size={20} />
+               </button>
+             )}
+             <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <Sparkles size={18} className="text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-gray-800 tracking-tight">Antigravity AI</h1>
+             </div>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Selected Model</span>
+              <span className="text-xs font-semibold text-indigo-600 truncate max-w-[200px]">
+                {selectedModel.split('/').pop()}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-2xl rounded-xl bg-white/80 p-6 shadow-2xl backdrop-blur-md ring-1 ring-gray-200 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <h1 className="text-center text-3xl font-bold text-gray-800 tracking-tight">
@@ -245,12 +310,48 @@ function Home() {
                     <option value="square">Square (512 x 512)</option>
                     <option value="portrait">Portrait (512 x 768)</option>
                     <option value="landscape">Landscape (768 x 512)</option>
+                    <option value="custom">Custom Dimensions</option>
                  </select>
                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                     <ChevronDown size={18} />
                  </div>
                </div>
             </div>
+
+            {shape === "custom" && (
+              <div className="grid grid-cols-2 gap-4 transition-all duration-300">
+                <div className="space-y-2">
+                  <label htmlFor="width" className="block text-sm font-semibold text-gray-700">
+                    Width
+                  </label>
+                  <input
+                    type="number"
+                    id="width"
+                    value={width}
+                    onChange={handleWidthChange}
+                    min="64"
+                    max="2048"
+                    step="8"
+                    className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-gray-700"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="height" className="block text-sm font-semibold text-gray-700">
+                    Height
+                  </label>
+                  <input
+                    type="number"
+                    id="height"
+                    value={height}
+                    onChange={handleHeightChange}
+                    min="64"
+                    max="2048"
+                    step="8"
+                    className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all text-gray-700"
+                  />
+                </div>
+              </div>
+            )}
               
             <button
               className="relative flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 p-3 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl active:scale-[0.98] transition-all duration-200 cursor-pointer"
@@ -284,6 +385,7 @@ function Home() {
             )}
           </form>
         </div>
+        </div>
       </main>
 
       {/* Toast Notification */}
@@ -301,7 +403,7 @@ function Home() {
           <span className="font-medium text-sm">{toastMessage}</span>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

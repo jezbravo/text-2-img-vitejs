@@ -46,7 +46,7 @@ app.post("/api/generateImage", async (req, res) => {
     console.error(error);
     console.error("------- ERROR END -------");
     
-    res.status(500).json({ error: "Error interno del servidor" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 

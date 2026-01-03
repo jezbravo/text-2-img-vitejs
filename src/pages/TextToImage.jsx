@@ -16,7 +16,7 @@ function TextToImage() {
   const [loading, setLoading] = useState(false);
   const [width, setWidth] = useState(512);
   const [height, setHeight] = useState(512);
-  const [shape, setShape] = useState("square");
+  const [shape, setShape] = useState("portrait");
   const [selectedModel, setSelectedModel] = useState(defaultModel);
   const [provider, setProvider] = useState("auto");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

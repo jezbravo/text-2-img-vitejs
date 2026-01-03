@@ -45,21 +45,35 @@ app.post("/api/generateImage", async (req, res) => {
     console.error("------- ERROR START -------");
     console.error("Time:", new Date().toISOString());
     console.error("Error during image generation:");
-    console.error(error);
+    console.error("Provider:", provider || "auto");
+    console.error("Model:", model);
+    console.error("Error type:", error.constructor.name);
+    console.error("Error message:", error.message);
+    if (error.cause) {
+      console.error("Error cause:", error.cause);
+    }
+    console.error("Full error:", error);
     console.error("------- ERROR END -------");
     
-    res.status(500).json({ error: error.message || "Internal server error" });
+    let errorMessage = error.message || "Internal server error";
+    
+    if (error.constructor.name === "InferenceClientProviderOutputError") {
+      errorMessage = `The selected model '${model}' is not compatible with the '${provider || "auto"}' provider. Please try selecting a different provider from the dropdown, or use 'auto' for automatic selection. (Error: ${error.message})`;
+    }
+    
+    res.status(500).json({ error: errorMessage });
   }
 });
 
 app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
   const { prompt, model, provider } = req.body;
   const image = req.file;
+  const selectedProvider = provider || "auto";
 
   console.log("=== IMAGE TO IMAGE REQUEST ===");
   console.log("Model:", model);
   console.log("Provider (raw):", provider);
-  console.log("Provider (will use):", provider || "auto");
+  console.log("Provider (will use):", selectedProvider);
   console.log("==============================");
 
   if (!image) {
@@ -67,9 +81,6 @@ app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
   }
 
   try {
-    // Convert Buffer to a Blob/ArrayBuffer format that the SDK expects
-    // for certain providers like fal-ai that might incorrectly assume browser-like objects.
-    const selectedProvider = provider || "auto";
     console.log("Calling hf.imageToImage with provider:", selectedProvider);
     
     const response = await hf.imageToImage({
@@ -90,10 +101,22 @@ app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
     console.error("------- IMG2IMG ERROR START -------");
     console.error("Time:", new Date().toISOString());
     console.error("Model:", model);
-    console.error("Error during image-to-image generation:");
-    console.error(error);
+    console.error("Provider:", selectedProvider);
+    console.error("Error type:", error.constructor.name);
+    console.error("Error message:", error.message);
+    if (error.cause) {
+      console.error("Error cause:", error.cause);
+    }
+    console.error("Full error:", error);
     console.error("------- IMG2IMG ERROR END -------");
-    res.status(500).json({ error: error.message || "Internal server error" });
+    
+    let errorMessage = error.message || "Internal server error";
+    
+    if (error.constructor.name === "InferenceClientProviderOutputError") {
+      errorMessage = `The selected model '${model}' is not compatible with the '${selectedProvider}' provider. Please try selecting a different provider from the dropdown, or use 'auto' for automatic selection. (Error: ${error.message})`;
+    }
+    
+    res.status(500).json({ error: errorMessage });
   }
 });
 

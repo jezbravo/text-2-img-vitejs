@@ -15,43 +15,43 @@ import PropTypes from 'prop-types';
 
 const API_BASE = 'https://huggingface.co/api/models';
 
-const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose }) => {
+const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "text-to-image" }) => {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('hf_favorites');
+    const saved = localStorage.getItem(`hf_favorites_${task}`);
     return saved ? JSON.parse(saved) : [];
   });
   const [disliked, setDisliked] = useState(() => {
-    const saved = localStorage.getItem('hf_disliked');
+    const saved = localStorage.getItem(`hf_disliked_${task}`);
     return saved ? JSON.parse(saved) : [];
   });
 
+  const fetchModels = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}?filter=${task},endpoints_compatible&sort=downloads&direction=-1&limit=100`);
+      const data = await res.json();
+      setModels(data);
+    } catch (error) {
+      console.error('Error fetching HF models:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchModels = async () => {
-      setLoading(true);
-      try {
-        // Fetch models that are guaranteed to work with the Inference API
-        const res = await fetch(`${API_BASE}?filter=text-to-image,endpoints_compatible&sort=downloads&direction=-1&limit=100`);
-        const data = await res.json();
-        setModels(data);
-      } catch (error) {
-        console.error('Error fetching HF models:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchModels();
-  }, []);
+  }, [task]);
 
   useEffect(() => {
-    localStorage.setItem('hf_favorites', JSON.stringify(favorites));
-  }, [favorites]);
+    localStorage.setItem(`hf_favorites_${task}`, JSON.stringify(favorites));
+  }, [favorites, task]);
 
   useEffect(() => {
-    localStorage.setItem('hf_disliked', JSON.stringify(disliked));
-  }, [disliked]);
+    localStorage.setItem(`hf_disliked_${task}`, JSON.stringify(disliked));
+  }, [disliked, task]);
 
   const toggleFavorite = (e, modelId) => {
     e.stopPropagation();
@@ -113,9 +113,14 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose }) => {
     >
       <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0">
         <div className="flex items-center space-x-2">
-          <div className="p-1.5 bg-blue-50 rounded-lg">
-            <RotateCw className="w-5 h-5 text-blue-600" />
-          </div>
+          <button 
+            onClick={fetchModels}
+            disabled={loading}
+            className={`p-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer group ${loading ? 'opacity-50' : ''}`}
+            title="Refresh models"
+          >
+            <RotateCw className={`w-5 h-5 text-blue-600 transition-transform duration-500 ${loading ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+          </button>
           <h2 className="font-bold text-gray-800 tracking-tight">HF Models</h2>
         </div>
         <button 
@@ -250,7 +255,8 @@ ModelSidebar.propTypes = {
   selectedModel: PropTypes.string.isRequired,
   onSelectModel: PropTypes.func.isRequired,
   isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
+  task: PropTypes.string
 };
 
 export default ModelSidebar;

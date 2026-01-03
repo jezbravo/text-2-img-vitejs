@@ -8,7 +8,8 @@ import {
   Check, 
   ChevronRight,
   Info,
-  X
+  X,
+  Server
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
@@ -287,15 +288,32 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-[10px] text-gray-400 font-medium">
-                    <span className="flex items-center">
-                      <Star className="w-3 h-3 mr-0.5 text-amber-400 fill-current" />
-                      {model.likes?.toLocaleString() || 0}
-                    </span>
-                    <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
-                      {model.downloads > 1000 ? `${(model.downloads/1000).toFixed(1)}k` : model.downloads || 0} dl
-                    </span>
+                <div className="mt-2 flex items-start justify-between">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex items-center space-x-1.5 text-[10px] text-gray-400 font-medium">
+                      <span className="flex items-center">
+                        <Star className="w-3 h-3 mr-0.5 text-amber-400 fill-current" />
+                        {model.likes?.toLocaleString() || 0}
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">
+                        {model.downloads > 1000 ? `${(model.downloads/1000).toFixed(1)}k` : model.downloads || 0} dl
+                      </span>
+                    </div>
+                    {model.providers && model.providers.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1" title={`Available on: ${model.providers.join(', ')}`}>
+                        {model.providers.slice(0, 2).map((provider) => (
+                          <span key={provider} className="inline-flex items-center px-1 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-medium">
+                            <Server className="w-2.5 h-2.5 mr-0.5" />
+                            {provider}
+                          </span>
+                        ))}
+                        {model.providers.length > 2 && (
+                          <span className="inline-flex items-center px-1 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px] font-medium">
+                            +{model.providers.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {isSelected && (
                     <span className="bg-blue-500 text-white p-0.5 rounded-full">

@@ -1,6 +1,10 @@
 import express, { json } from "express";
 import { appendFile } from "fs";
 import cors from "cors";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 // app.use(cors());
@@ -11,6 +15,36 @@ app.use(
 );
 
 app.use(json());
+
+import { HfInference } from "@huggingface/inference";
+
+const hf = new HfInference(process.env.VITE_HF_TOKEN);
+
+app.post("/api/generateImage", async (req, res) => {
+  const { prompt, model } = req.body;
+  console.log("Request body:", req.body);
+
+  try {
+    const response = await hf.textToImage({
+      model: model,
+      inputs: prompt,
+    });
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.set("Content-Type", "image/jpeg");
+    res.send(buffer);
+  } catch (error) {
+    console.error("------- ERROR START -------");
+    console.error("Time:", new Date().toISOString());
+    console.error("Error during image generation:");
+    console.error(error);
+    console.error("------- ERROR END -------");
+    
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 
 app.post("/log", (req, res) => {
   const { filename, textInput } = req.body;

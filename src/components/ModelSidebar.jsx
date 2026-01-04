@@ -199,6 +199,13 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
     });
   }, [models, searchTerm, favorites, disliked]);
 
+  // Automatically select the first model if none is selected
+  useEffect(() => {
+    if (!selectedModel && filteredModels.length > 0) {
+      onSelectModel(filteredModels[0].id);
+    }
+  }, [selectedModel, filteredModels, onSelectModel]);
+
   return (
     <motion.aside
       initial={{ x: -320 }}

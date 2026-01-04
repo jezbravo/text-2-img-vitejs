@@ -121,7 +121,7 @@ app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
 });
 
 app.post("/api/imageToVideo", upload.single("image"), async (req, res) => {
-  const { model, provider } = req.body;
+  const { model, provider, prompt, duration, width, height } = req.body;
   const image = req.file;
   const selectedProvider = provider || "hf-inference";
 
@@ -129,6 +129,9 @@ app.post("/api/imageToVideo", upload.single("image"), async (req, res) => {
   console.log("Model:", model);
   console.log("Provider (raw):", provider);
   console.log("Provider (will use):", selectedProvider);
+  console.log("Prompt:", prompt);
+  console.log("Duration (frames):", duration);
+  console.log("Resolution:", width, "x", height);
   console.log("==============================");
 
   if (!image) {
@@ -139,10 +142,17 @@ app.post("/api/imageToVideo", upload.single("image"), async (req, res) => {
     console.log("Calling hf.imageToVideo with provider:", selectedProvider);
     console.log("Model:", model);
 
+    const params = {};
+    if (prompt) params.prompt = prompt; // specific for models like i2vgen-xl
+    if (duration) params.num_frames = parseInt(duration);
+    if (width) params.width = parseInt(width);
+    if (height) params.height = parseInt(height);
+
     const response = await hf.imageToVideo({
       model: model,
       inputs: new Blob([image.buffer]),
       provider: selectedProvider,
+      parameters: params,
     });
 
     const arrayBuffer = await response.arrayBuffer();

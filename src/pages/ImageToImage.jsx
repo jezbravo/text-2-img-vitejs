@@ -11,7 +11,7 @@ function ImageToImage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("stabilityai/stable-diffusion-xl-refiner-1.0"); // Better default for img2img
+  const [selectedModel, setSelectedModel] = useState(""); // Default selected by Sidebar
   const [provider, setProvider] = useState("auto");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showToast, setShowToast] = useState(false);
@@ -236,8 +236,8 @@ function ImageToImage() {
 
               <button
                 type="submit"
-                disabled={loading || !selectedImage}
-                className={`w-full flex items-center justify-center rounded-lg p-3 text-white font-semibold shadow-lg transition-all duration-200 ${loading || !selectedImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl active:scale-[0.98] cursor-pointer'}`}
+                disabled={loading || !selectedImage || !selectedModel}
+                className={`w-full flex items-center justify-center rounded-lg p-3 text-white font-semibold shadow-lg transition-all duration-200 ${loading || !selectedImage || !selectedModel ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl active:scale-[0.98] cursor-pointer'}`}
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">

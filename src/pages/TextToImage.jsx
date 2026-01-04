@@ -1,7 +1,6 @@
 import { useState } from "react";
 import getCurrentDateTime from "../script/date";
 import { saveAs } from "file-saver";
-import { mainModel as defaultModel } from "../../models";
 import { Copy, Trash2, ChevronDown, Menu, Sparkles, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ModelSidebar from "../components/ModelSidebar";
@@ -17,7 +16,7 @@ function TextToImage() {
   const [width, setWidth] = useState(512);
   const [height, setHeight] = useState(512);
   const [shape, setShape] = useState("portrait");
-  const [selectedModel, setSelectedModel] = useState(defaultModel);
+  const [selectedModel, setSelectedModel] = useState("");
   const [provider, setProvider] = useState("auto");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showToast, setShowToast] = useState(false);
@@ -387,7 +386,7 @@ function TextToImage() {
             <button
               className="relative flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 p-3 text-white font-semibold shadow-lg hover:from-blue-600 hover:to-indigo-700 hover:shadow-xl active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-500 disabled:hover:to-indigo-600 disabled:shadow-none disabled:active:scale-100"
               type="submit"
-              disabled={loading}
+              disabled={loading || !selectedModel}
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

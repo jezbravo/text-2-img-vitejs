@@ -1,7 +1,7 @@
 import { useState } from "react";
 import getCurrentDateTime from "../script/date";
 import { saveAs } from "file-saver";
-import { ChevronDown, Menu, Upload, Video, Home } from "lucide-react";
+import { ChevronDown, Menu, Upload, Video, Home, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ModelSidebar from "../components/ModelSidebar";
 
@@ -11,9 +11,30 @@ function ImageToVideo() {
   const [imagePreview, setImagePreview] = useState(null);
   const [prompt, setPrompt] = useState("Make this image more dynamic with subtle motion");
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("stabilityai/stable-video-diffusion-img2vid");
+  const [duration, setDuration] = useState("25");
+  const [resolution, setResolution] = useState("1024x576");
+  const [selectedModel, setSelectedModel] = useState("");
+
   const [provider, setProvider] = useState("hf-inference");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const triggerToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  const copyPrompt = () => {
+    navigator.clipboard.writeText(prompt);
+    triggerToast("Motion instruction copied to clipboard!");
+  };
+
+  const clearPrompt = () => {
+    setPrompt("");
+  };
+
   const providers = [
     "auto",
     "cerebras",
@@ -74,6 +95,13 @@ function ImageToVideo() {
       formData.append("image", selectedImage);
       formData.append("model", selectedModel);
       formData.append("provider", provider);
+      formData.append("prompt", prompt);
+      formData.append("duration", duration);
+      
+      const [width, height] = resolution.split("x");
+      formData.append("width", width);
+      formData.append("height", height);
+
 
       console.log("Sending request with provider:", provider);
 
@@ -206,20 +234,80 @@ function ImageToVideo() {
 
               <div className="space-y-2">
                 <label htmlFor="prompt" className="block text-sm font-semibold text-gray-700">Motion Instruction</label>
-                <textarea
-                  id="prompt"
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-300 bg-white p-3 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-gray-700"
-                  value={prompt}
-                  onChange={handlePromptChange}
-                  placeholder="Describe how the image should move or transform..."
-                ></textarea>
+                <div className="relative">
+                  <textarea
+                    id="prompt"
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-gray-700"
+                    value={prompt}
+                    onChange={handlePromptChange}
+                    placeholder="Describe how the image should move or transform..."
+                  ></textarea>
+                  <div className="absolute right-2 top-2 flex flex-col space-y-2 bg-white/90 p-1 rounded-md shadow-sm border border-gray-100">
+                    <button
+                      type="button"
+                      onClick={copyPrompt}
+                      className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-emerald-500 transition-colors cursor-pointer"
+                      title="Copy instruction"
+                    >
+                      <Copy size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearPrompt}
+                      className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-500 transition-colors cursor-pointer"
+                      title="Clear instruction"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <button
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="duration" className="block text-sm font-semibold text-gray-700">Duration (Frames)</label>
+                  <div className="relative">
+                    <select
+                      id="duration"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-gray-700 cursor-pointer"
+                    >
+                      <option value="14">Short (14 frames)</option>
+                      <option value="25">Medium (25 frames)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                       <ChevronDown size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="resolution" className="block text-sm font-semibold text-gray-700">Resolution</label>
+                  <div className="relative">
+                    <select
+                      id="resolution"
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-gray-300 bg-white p-3 pr-10 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all text-gray-700 cursor-pointer"
+                    >
+                      <option value="1024x576">Wide (1024x576)</option>
+                      <option value="576x1024">Portrait (576x1024)</option>
+                      <option value="768x768">Square (768x768)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                      <ChevronDown size={18} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+                <button
                 type="submit"
-                disabled={loading || !selectedImage}
-                className={`w-full flex items-center justify-center rounded-lg p-3 text-white font-semibold shadow-lg transition-all duration-200 ${loading || !selectedImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl active:scale-[0.98] cursor-pointer'}`}
+                disabled={loading || !selectedImage || !selectedModel}
+                className={`w-full flex items-center justify-center rounded-lg p-3 text-white font-semibold shadow-lg transition-all duration-200 ${loading || !selectedImage || !selectedModel ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl active:scale-[0.98] cursor-pointer'}`}
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -229,11 +317,23 @@ function ImageToVideo() {
                 ) : "Generate Video"}
               </button>
             </form>
+
           </div>
         </div>
       </main>
 
 
+
+      <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform ${showToast ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0 pointer-events-none"}`}>
+        <div className="bg-gray-800 text-white px-6 py-3 rounded-full shadow-lg flex items-center space-x-2 border border-gray-700">
+          <div className="bg-emerald-500 rounded-full p-1">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="font-medium text-sm">{toastMessage}</span>
+        </div>
+      </div>
     </div>
   );
 }

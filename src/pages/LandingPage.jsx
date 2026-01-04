@@ -43,7 +43,7 @@ function LandingPage() {
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <Sparkles size={22} className="text-white" />
           </div>
-          <span className="text-2xl font-bold tracking-tighter">Antigravity AI</span>
+          <span className="text-2xl font-bold tracking-tighter">Vandavel AI</span>
         </div>
       </nav>
 
@@ -96,7 +96,7 @@ function LandingPage() {
       </main>
 
       <footer className="relative z-10 border-t border-white/5 py-12 text-center text-gray-500">
-        <p>© 2026 Antigravity AI. Powered by Hugging Face.</p>
+        <p>© 2026 Vandavel AI. Powered by Hugging Face.</p>
       </footer>
     </div>
   );

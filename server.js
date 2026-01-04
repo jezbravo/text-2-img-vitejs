@@ -120,9 +120,62 @@ app.post("/api/imageToImage", upload.single("image"), async (req, res) => {
   }
 });
 
+app.post("/api/imageToVideo", upload.single("image"), async (req, res) => {
+  const { model, provider } = req.body;
+  const image = req.file;
+  const selectedProvider = provider || "hf-inference";
+
+  console.log("=== IMAGE TO VIDEO REQUEST ===");
+  console.log("Model:", model);
+  console.log("Provider (raw):", provider);
+  console.log("Provider (will use):", selectedProvider);
+  console.log("==============================");
+
+  if (!image) {
+    return res.status(400).json({ error: "No image file provided" });
+  }
+
+  try {
+    console.log("Calling hf.imageToVideo with provider:", selectedProvider);
+    console.log("Model:", model);
+
+    const response = await hf.imageToVideo({
+      model: model,
+      inputs: new Blob([image.buffer]),
+      provider: selectedProvider,
+    });
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.set("Content-Type", "video/mp4");
+    res.send(buffer);
+  } catch (error) {
+    console.error("------- IMG2VID ERROR START -------");
+    console.error("Time:", new Date().toISOString());
+    console.error("Model:", model);
+    console.error("Provider:", selectedProvider);
+    console.error("Error type:", error.constructor.name);
+    console.error("Error message:", error.message);
+    if (error.cause) {
+      console.error("Error cause:", error.cause);
+    }
+    console.error("Full error:", error);
+    console.error("------- IMG2VID ERROR END -------");
+
+    let errorMessage = error.message || "Internal server error";
+
+    if (error.constructor.name === "InferenceClientProviderOutputError") {
+      errorMessage = `The selected model '${model}' is not compatible with the '${selectedProvider}' provider. Please try selecting a different provider from the dropdown, or use 'auto' for automatic selection. (Error: ${error.message})`;
+    }
+
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
 app.post("/log", (req, res) => {
-  const { filename, textInput } = req.body;
-  const logMessage = `FILENAME: ${filename}\nPROMPT: ${textInput}\n-------\n`;
+  const { filename, model } = req.body;
+  const logMessage = `FILENAME: ${filename}\nMODEL: ${model}\nTIMESTAMP: ${new Date().toISOString()}\n-------\n`;
   appendFile("log.txt", logMessage, (err) => {
     if (err) {
       console.error(err);

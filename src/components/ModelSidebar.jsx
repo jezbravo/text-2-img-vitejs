@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 // Inference providers that support text-to-image
 const TEXT_TO_IMAGE_PROVIDERS = [
   'hf-inference',
-  'fal-ai', 
+  'fal-ai',
   'replicate',
   'together',
   'nebius',
@@ -27,6 +27,23 @@ const TEXT_TO_IMAGE_PROVIDERS = [
   'hyperbolic',
   'fireworks-ai',
   'scaleway'
+];
+
+// Inference providers that support image-to-video
+const IMAGE_TO_VIDEO_PROVIDERS = [
+  'fal-ai',
+  'replicate',
+  'together',
+  'nebius',
+  'nscale',
+  'ovhcloud',
+  'publicai',
+  'sambanova',
+  'scaleway',
+  'fireworks-ai',
+  'hf-inference',
+  'hyperbolic',
+  'wavespeed'
 ];
 
 const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "text-to-image" }) => {
@@ -45,14 +62,17 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
   const fetchModels = useCallback(async () => {
     setLoading(true);
     try {
+      // Select providers based on task type
+      const providers = task === "image-to-video" ? IMAGE_TO_VIDEO_PROVIDERS : TEXT_TO_IMAGE_PROVIDERS;
+
       // Fetch models from all inference providers in parallel
-      const providerPromises = TEXT_TO_IMAGE_PROVIDERS.map(async (provider) => {
+      const providerPromises = providers.map(async (provider) => {
         try {
           const res = await fetch(`https://huggingface.co/api/partners/${provider}/models`);
           if (!res.ok) return [];
           const data = await res.json();
-          
-          // Extract text-to-image models from the response
+
+          // Extract models based on task type
           const taskModels = data[task] || {};
           return Object.keys(taskModels).map(modelId => ({
             id: modelId,
@@ -67,7 +87,7 @@ const ModelSidebar = ({ selectedModel, onSelectModel, isOpen, onClose, task = "t
       });
 
       const allProviderModels = await Promise.all(providerPromises);
-      
+
       // Flatten and deduplicate models (same model might be available on multiple providers)
       const modelMap = new Map();
       allProviderModels.flat().forEach(model => {

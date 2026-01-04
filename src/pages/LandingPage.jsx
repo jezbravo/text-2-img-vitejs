@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Image as ImageIcon, Wand2, ArrowRight } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Wand2, ArrowRight, Video } from "lucide-react";
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -21,6 +21,14 @@ function LandingPage() {
       path: "/image-to-image",
       color: "from-emerald-500/20 to-teal-500/20",
       borderColor: "hover:border-emerald-500/50",
+    },
+    {
+      title: "Image to Video",
+      description: "Bring your static images to life by converting them into short, stunning video clips.",
+      icon: <Video className="w-8 h-8 text-violet-500" />,
+      path: "/image-to-video",
+      color: "from-violet-500/20 to-fuchsia-500/20",
+      borderColor: "hover:border-violet-500/50",
     },
   ];
 
